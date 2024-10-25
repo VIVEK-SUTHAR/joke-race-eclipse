@@ -8,7 +8,7 @@ pub mod state;
 use instructions::*;
 use state::*;
 
-declare_id!("HUTpgdZUCAZpMazn7zo2TnhTF9hjNHK9rDf7zYojFhRQ");
+declare_id!("BUjBdCdFmNDrBn6Sg2SB4dd6H8StsFZ7U4JqvzEAYHgh");
 
 #[program]
 pub mod joke_race_eclipse {
