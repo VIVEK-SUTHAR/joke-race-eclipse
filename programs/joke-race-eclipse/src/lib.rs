@@ -1,4 +1,21 @@
 use anchor_lang::prelude::*;
+
+mod constants;
+mod error;
+mod events;
+mod state;
+
+use constants::{
+    CONTEST_COUNTER_SEED_PREFIX, CONTEST_SEED_PREFIX, VAULT_SEED_PREFIX, VOTE_ACCOUNT_SEED_PREFIX,
+};
+
+use error::ErrorCode;
+use events::{ContestCreated, VoteCasted};
+use state::contest::Contest;
+use state::contest_counter::ContestCounter;
+use state::vault::Vault;
+use state::vote_account::VoterContestRecord;
+
 declare_id!("HUTpgdZUCAZpMazn7zo2TnhTF9hjNHK9rDf7zYojFhRQ");
 
 #[program]
@@ -31,16 +48,20 @@ pub mod joke_race_eclipse {
         contest.author = ctx.accounts.author.key();
 
         let clock = Clock::get()?;
-        contest.start_time = clock.unix_timestamp;
-        contest.end_time = end_time;
         contest_counter.count += 1;
+
+        let start_time = clock.unix_timestamp;
+        contest.start_time = start_time;
+        contest.end_time = end_time;
 
         //Emit Event when The New Contest is created
         emit!(ContestCreated {
             contest_id: count,
             metadata_uri: metadata_uri,
             created_by: *ctx.accounts.author.key,
-            created_at: Clock::get()?.unix_timestamp
+            created_at: Clock::get()?.unix_timestamp,
+            start_time: start_time,
+            end_time: end_time
         });
 
         Ok(())
@@ -86,7 +107,6 @@ pub mod joke_race_eclipse {
 
         contest.upvotes += 1;
 
-        //Move Sol from User to vault
         let ix = anchor_lang::solana_program::system_instruction::transfer(
             &ctx.accounts.voter.key(),
             &ctx.accounts.vault.key(),
@@ -105,7 +125,8 @@ pub mod joke_race_eclipse {
         emit!(VoteCasted {
             voted_by: *ctx.accounts.voter.key,
             casted_at: Clock::get()?.unix_timestamp,
-            contest_id: contest.id
+            contest_id: contest.id,
+            contestant_id: contestant_id
         });
 
         Ok(())
@@ -130,8 +151,8 @@ pub struct Initialize<'info> {
     #[account(
         init,
         payer = owner,
-        seeds=[b"vault"],
-        space = 8 + 32,
+        seeds=[VAULT_SEED_PREFIX],
+        space = Vault::SPACE,
         bump,
     )]
     pub vault: Account<'info, Vault>,
@@ -146,8 +167,8 @@ pub struct InitContestCounter<'info> {
     #[account(
         init,
         payer = owner,
-        space = 8 + 8,
-        seeds = [b"contest_counter"],
+        space = ContestCounter::SPACE,
+        seeds = [CONTEST_COUNTER_SEED_PREFIX],
         bump
     )]
     pub contest_counter: Account<'info, ContestCounter>,
@@ -162,8 +183,8 @@ pub struct CreateContest<'info> {
     #[account(
         init,
         payer = author,
-        space = 8 + 256 + 8 + 8 + 32,
-        seeds = [b"contest", author.key().as_ref(), &contest_counter.count.to_le_bytes()],
+        space = Contest::SPACE,
+        seeds = [CONTEST_SEED_PREFIX, author.key().as_ref(), &contest_counter.count.to_le_bytes()],
         bump
     )]
     pub contest: Account<'info, Contest>,
@@ -171,7 +192,7 @@ pub struct CreateContest<'info> {
     pub author: Signer<'info>,
     #[account(
         mut,
-        seeds = [b"contest_counter"],
+        seeds = [CONTEST_COUNTER_SEED_PREFIX],
         bump
     )]
     pub contest_counter: Account<'info, ContestCounter>,
@@ -183,15 +204,15 @@ pub struct CreateContest<'info> {
 pub struct Vote<'info> {
     #[account(
         mut,
-        seeds = [b"contest", contest.author.as_ref() , &contest.id.to_le_bytes()],
+        seeds = [CONTEST_SEED_PREFIX, contest.author.as_ref() , &contest.id.to_le_bytes()],
         bump
     )]
     pub contest: Account<'info, Contest>,
     #[account(
     init_if_needed,
     payer = voter,
-    space = 8 + 32 + 32 + 8 + 8,
-    seeds = [b"vote_account",voter.key().as_ref() ,&contest.id.to_le_bytes() ,&contestant_id.to_le_bytes()],
+    space = VoterContestRecord::SPACE,
+    seeds = [VOTE_ACCOUNT_SEED_PREFIX,voter.key().as_ref() ,&contest.id.to_le_bytes() ,&contestant_id.to_le_bytes()],
     bump
 )]
     pub voter_record: Account<'info, VoterContestRecord>,
@@ -214,52 +235,4 @@ pub struct Distribute<'info> {
     ///CHECK: SOl transfer
     pub recipient: AccountInfo<'info>,
     pub system_program: Program<'info, System>,
-}
-
-#[account]
-pub struct Vault {
-    pub authority: Pubkey,
-}
-
-#[account]
-pub struct Contest {
-    pub id: u64,
-    pub metadata_uri: String,
-    pub upvotes: u64,
-    pub author: Pubkey,
-    pub start_time: i64,
-    pub end_time: i64,
-}
-
-#[account]
-pub struct ContestCounter {
-    pub count: u64,
-}
-
-#[account]
-pub struct VoterContestRecord {
-    pub contest_id: u64,
-    pub contestant_id: [u8; 32],
-    pub voter: Pubkey,
-    pub total_votes: u64,
-}
-#[error_code]
-pub enum ErrorCode {
-    AlreadyVoted,
-    VotingEnded,
-    Unauthorized,
-}
-
-#[event]
-pub struct ContestCreated {
-    contest_id: u64,
-    created_by: Pubkey,
-    metadata_uri: String,
-    created_at: i64,
-}
-#[event]
-pub struct VoteCasted {
-    voted_by: Pubkey,
-    contest_id: u64,
-    casted_at: i64,
 }
