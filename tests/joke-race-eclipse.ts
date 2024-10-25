@@ -20,7 +20,11 @@ describe("JokeRace Tests On Eclipse", async () => {
   }
 
   function getVaultAddress() {
-    return valutKeyPair.publicKey;
+    const pdaAddress = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("vault")],
+      program.programId
+    )[0];
+    return pdaAddress;
   }
 
   let proposalCounterPDA;
@@ -39,7 +43,6 @@ describe("JokeRace Tests On Eclipse", async () => {
         owner: provider.wallet.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
       })
-      .signers([valutKeyPair])
       .rpc();
     const vaultAccount = await program.account.vault.fetch(vaultPubkey);
     expect(vaultAccount.authority.toString()).to.equal(
@@ -85,7 +88,6 @@ describe("JokeRace Tests On Eclipse", async () => {
       proposalPDA.toString()
     );
     proposalAddress = proposalPDA.toString();
-    console.log("Contest ID", proposalAccount.id.toString());
     expect(proposalAccount.metadataUri).to.equal("https://sine");
     expect(proposalAccount.upvotes.toNumber()).to.equal(0);
     expect(proposalAccount.author.toString()).to.equal(
@@ -123,45 +125,34 @@ describe("JokeRace Tests On Eclipse", async () => {
     expect(updatedContestAccount.upvotes.toNumber()).to.equal(1);
   });
 
-  it("Should Fail when Voting second time", async () => {
-    const proposalAccount = await program.account.contest.fetch(
-      proposalAddress
-    );
-
+  it("Shoule be able to Vote on Same contestant for second time", async () => {
+    const contestAccount = await program.account.contest.fetch(proposalAddress);
     const contestantId = new BN(1);
-
     const voterRecordPDA = anchor.web3.PublicKey.findProgramAddressSync(
       [
         Buffer.from("vote_account"),
         provider.wallet.publicKey.toBuffer(),
-        proposalAccount.id.toArrayLike(Buffer, "le", 8),
+        contestAccount.id.toArrayLike(Buffer, "le", 8),
         contestantId.toArrayLike(Buffer, "le", 8),
       ],
       program.programId
     )[0];
 
-    const updatedProposalAccount = await program.account.contest.fetch(
+    const tx = await program.methods
+      .vote(new BN(0.1 * anchor.web3.LAMPORTS_PER_SOL), contestantId)
+      .accounts({
+        contest: proposalAddress,
+        voter: provider.wallet.publicKey,
+        vault: getVaultAddress(),
+        voterRecord: voterRecordPDA,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .rpc();
+
+    const updatedContestAccount = await program.account.contest.fetch(
       proposalAddress
     );
-    expect(updatedProposalAccount.upvotes.toNumber()).to.equal(1);
-
-    try {
-      await program.methods
-        .vote(new anchor.BN(100000000), contestantId)
-        .accounts({
-          contest: proposalAddress,
-          voter: provider.wallet.publicKey,
-          vault: getVaultAddress(),
-          voterRecord: voterRecordPDA,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .rpc();
-
-      throw new Error("Vote succeeded but should have failed");
-    } catch (err) {
-      const expectedError = "AlreadyVoted";
-      expect(err.error.errorMessage).to.include(expectedError);
-    }
+    expect(updatedContestAccount.upvotes.toNumber()).to.equal(2);
   });
 
   it("Distributes the funds to the given address", async () => {

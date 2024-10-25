@@ -57,9 +57,11 @@ pub mod joke_race_eclipse {
             return err!(ErrorCode::VotingEnded);
         }
 
-        if voter_record.has_voted {
-            return err!(ErrorCode::AlreadyVoted);
-        }
+        //A User can Vote on Same project Multiple Times
+        // if voter_record.has_voted {
+        //     return err!(ErrorCode::AlreadyVoted);
+        // }
+        voter_record.total_votes += 1;
 
         // track of who voted by PubKey and has_voted
         voter_record.voter = *ctx.accounts.voter.key;
@@ -81,7 +83,6 @@ pub mod joke_race_eclipse {
             .copy_from_slice(&padded_contestant_id);
 
         voter_record.contest_id = contest.id;
-        voter_record.has_voted = true;
 
         contest.upvotes += 1;
 
@@ -129,7 +130,9 @@ pub struct Initialize<'info> {
     #[account(
         init,
         payer = owner,
+        seeds=[b"vault"],
         space = 8 + 32,
+        bump,
     )]
     pub vault: Account<'info, Vault>,
 
@@ -187,7 +190,7 @@ pub struct Vote<'info> {
     #[account(
     init_if_needed,
     payer = voter,
-    space = 8 + 32 + 32 + 8 + 1,
+    space = 8 + 32 + 32 + 8 + 8,
     seeds = [b"vote_account",voter.key().as_ref() ,&contest.id.to_le_bytes() ,&contestant_id.to_le_bytes()],
     bump
 )]
@@ -238,7 +241,7 @@ pub struct VoterContestRecord {
     pub contest_id: u64,
     pub contestant_id: [u8; 32],
     pub voter: Pubkey,
-    pub has_voted: bool,
+    pub total_votes: u64,
 }
 #[error_code]
 pub enum ErrorCode {
