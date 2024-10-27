@@ -12,7 +12,6 @@ pub struct Contest {
 }
 
 impl Contest {
-    //u64 requires 8 Bytes
     pub const SPACE: usize = ANCHOR_DISCRIMINATOR +
         8 + //8 for id u64
         256 + //256 For String(Max 256 Chars)

@@ -5,13 +5,13 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-joke_race_eclipse = "BUjBdCdFmNDrBn6Sg2SB4dd6H8StsFZ7U4JqvzEAYHgh"
+joke_race_eclipse = "3MDkCnEnfCYmHNVSs5xuCDdSoGrrRAGbAZ88YtFC1SRy"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "http://127.0.0.1:8899"
+cluster = "https://staging-rpc.dev2.eclipsenetwork.xyz"
 wallet = "./a.json"
 
 [scripts]

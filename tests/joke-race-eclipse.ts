@@ -107,7 +107,7 @@ describe("JokeRace Tests On Eclipse", async () => {
       ],
       program.programId
     )[0];
-
+    //0.20 Cents depending upon ETH Price From Coingeckk
     const tx = await program.methods
       .vote(new BN(0.1 * anchor.web3.LAMPORTS_PER_SOL), contestantId)
       .accounts({

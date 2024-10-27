@@ -43,26 +43,12 @@ pub fn handle_vote(ctx: Context<Vote>, amount: u64, contestant_id: u64) -> Resul
     // if voter_record.has_voted {
     //     return err!(ErrorCode::AlreadyVoted);
     // }
+
     voter_record.total_votes += 1;
 
-    // track of who voted by PubKey and has_voted
     voter_record.voter = *ctx.accounts.voter.key;
 
-    // First,we Convert the u64 contestant ID into a byte array.
-    //`to_le_bytes()` function converts the u64 into an array of 8 bytes (since the size of a u64 is 8 bytes).
-    let contestant_id_bytes = contestant_id.to_le_bytes();
-
-    //Then we, create a new array of 32 bytes, as we need a 32-byte sized array for padding.
-    //initialize this array with all zeros (using `0u8`), and it will have a fixed length of 32.
-    let mut padded_contestant_id = [0u8; 32];
-
-    // Copy the original 8-byte `contestant_id_bytes` into the first 8 bytes of  padded 32-byte array.
-    // The rest of the array remains filled with zeros, allowing us to meet the 32-byte size requirement.
-    padded_contestant_id[..8].copy_from_slice(&contestant_id_bytes);
-
-    voter_record
-        .contestant_id
-        .copy_from_slice(&padded_contestant_id);
+    voter_record.contestant_id = contestant_id;
 
     voter_record.contest_id = contest.id;
 
