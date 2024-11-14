@@ -29,6 +29,7 @@ pub struct CreateContest<'info> {
 pub fn handle_create_contest(
     ctx: Context<CreateContest>,
     metadata_uri: String,
+    start_time: i64,
     end_time: i64,
 ) -> Result<()> {
     let contest_counter = &mut ctx.accounts.contest_counter;
@@ -41,10 +42,9 @@ pub fn handle_create_contest(
     contest.upvotes = 0;
     contest.author = ctx.accounts.author.key();
 
-    let clock = Clock::get()?;
     contest_counter.count += 1;
 
-    let start_time = clock.unix_timestamp;
+    let start_time = start_time;
     contest.start_time = start_time;
     contest.end_time = end_time;
 

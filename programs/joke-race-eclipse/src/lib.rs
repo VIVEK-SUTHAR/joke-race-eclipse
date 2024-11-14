@@ -8,7 +8,7 @@ pub mod state;
 use instructions::*;
 use state::*;
 
-declare_id!("3MDkCnEnfCYmHNVSs5xuCDdSoGrrRAGbAZ88YtFC1SRy");
+declare_id!("7Pdxtpy9YUr9nU5wtqkSSWCmavyx5WNxWQGFAAfbKX7F");
 
 #[program]
 pub mod joke_race_eclipse {
@@ -25,9 +25,10 @@ pub mod joke_race_eclipse {
     pub fn create_contest(
         ctx: Context<CreateContest>,
         metadata_uri: String,
+        start_time: i64,
         end_time: i64,
     ) -> Result<()> {
-        handle_create_contest(ctx, metadata_uri, end_time)
+        handle_create_contest(ctx, metadata_uri, start_time, end_time)
     }
 
     pub fn vote(ctx: Context<Vote>, amount: u64, contestant_id: u64) -> Result<()> {

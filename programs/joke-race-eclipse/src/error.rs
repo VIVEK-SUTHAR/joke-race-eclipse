@@ -5,4 +5,5 @@ pub enum ErrorCode {
     AlreadyVoted,
     VotingEnded,
     Unauthorized,
+    VotingNotStarted,
 }

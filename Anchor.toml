@@ -5,7 +5,7 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-joke_race_eclipse = "3MDkCnEnfCYmHNVSs5xuCDdSoGrrRAGbAZ88YtFC1SRy"
+joke_race_eclipse = "7Pdxtpy9YUr9nU5wtqkSSWCmavyx5WNxWQGFAAfbKX7F"
 
 [registry]
 url = "https://api.apr.dev"

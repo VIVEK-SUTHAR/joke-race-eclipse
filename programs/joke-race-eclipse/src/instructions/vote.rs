@@ -35,7 +35,9 @@ pub fn handle_vote(ctx: Context<Vote>, amount: u64, contestant_id: u64) -> Resul
     let clock = Clock::get()?;
     let current_time = clock.unix_timestamp;
 
-    if current_time > contest.end_time {
+    if current_time < contest.start_time {
+        return err!(ErrorCode::VotingNotStarted);
+    } else if current_time > contest.end_time {
         return err!(ErrorCode::VotingEnded);
     }
 
