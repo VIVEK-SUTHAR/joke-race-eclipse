@@ -5,14 +5,14 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-joke_race_eclipse = "7Pdxtpy9YUr9nU5wtqkSSWCmavyx5WNxWQGFAAfbKX7F"
+joke_race_eclipse = "CGfVb6h6wHnAxLfMw3EnssxBEPQgdyNSQzXtWVYkx7Vn"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "https://staging-rpc.dev2.eclipsenetwork.xyz"
-wallet = "./a.json"
+cluster = "https://jokerace-eclipse-e236.mainnet.eclipse.rpcpool.com/47ac9695-3de0-4385-85d4-559ba45729f9"
+wallet = "./mainnnet.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
